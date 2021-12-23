@@ -1,31 +1,28 @@
 #include "Has_ptr.h"
 
-// definitions default and two parameter constructors
-Has_ptr::Has_ptr() :
-	ps(new std::string()), pval(new int()) {}
+Has_ptr::Has_ptr(const Has_ptr &orig) :
+	ps(orig.ps), val(orig.val), ref_count(orig.ref_count) {
 
-Has_ptr::Has_ptr(const std::string &str, int val) :
-	ps(new std::string(str)), pval(new int(val)) {}
-
-// definitions of copy control members
-Has_ptr::~Has_ptr() {
-	delete ps;
-	delete pval;
+	++ *ref_count;
 }
 
-Has_ptr::Has_ptr(const Has_ptr &orig) :
-	ps(new std::string(*orig.ps)), pval(new int(*orig.pval)) {}
+Has_ptr::~Has_ptr() {
+	if (-- *ref_count == 0) {
+		delete ps;
+		delete ref_count;
+	}
+}
 
-// handles self-assignment without an explicit check
 Has_ptr &Has_ptr::operator=(const Has_ptr &rhs) {
-	std::string ns(*rhs.ps);
-	int nval = *rhs.pval;
+	++ *rhs.ref_count;
+	if (-- * ref_count == 0) {
+		delete ps;
+		delete ref_count;
+	}
 
-	delete ps;
-	delete pval;
-
-	ps = new std::string(ns);
-	pval = new int(nval);
+	ps = rhs.ps;
+	val = rhs.val;
+	ref_count = rhs.ref_count;
 
 	return *this;
 }
